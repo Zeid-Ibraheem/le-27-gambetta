@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!--
+  LE 27 GAMBETTA : MODE D'EMPLOI POUR MODIFIER LE SITE À LA MAIN
+
+  Le dossier :   index.html   ce fichier (textes, mise en page, réglages)
+                 images/      toutes les photos et le logo
+                 fonts/       la police Lato
+
+  CHANGER UNE PHOTO
+    Mets ta photo dans le dossier images/, puis remplace le nom du fichier dans la balise <img> :
+        <img src="images/chocolat-or.webp" ...>     devient     <img src="images/ma-photo.jpg" ...>
+    Avant, allège-la : 2000 px de large au maximum et moins de 400 Ko, sinon le site rame sur téléphone.
+    Sous Linux, avec ImageMagick :
+        magick ma-photo.jpg -auto-orient -resize '2000x>' -quality 78 images/ma-photo.webp
+
+  CADRER UNE PHOTO  (dans l'attribut style de la balise <img>)
+        style="--x:50%; --y:30%; --zoom:1.2"
+    --x      0% = on garde la gauche,  50% = le centre,  100% = la droite
+    --y      0% = on garde le haut,    50% = le centre,  100% = le bas
+    --zoom   1 = taille normale,  1.2 = 20 % plus gros
+    Si --x (ou --y) ne change rien, c'est que la photo est déjà visible en entier dans ce sens :
+    monte --zoom (1.15 par exemple) et le réglage se met à agir.
+
+  TAILLE ET FORME D'UN CADRE PHOTO  (dans l'attribut style du cadre : la balise class="cadre")
+        style="--largeur:400px; --format:4/5"
+    --largeur   largeur du cadre. La hauteur suit toute seule, d'après le format.
+                Dans les blocs photo + texte (chef, plat signature, lieu), le texte prend la place qui reste.
+    --format    largeur/hauteur :  4/5 = portrait,  2/3 = portrait plus haut,  1/1 = carré,  3/2 = paysage
+    --d         retard de l'apparition du cadre quand on descend dans la page (.15s = 0,15 seconde)
+
+  DÉPLACER UNE PHOTO
+    Coupe le bloc entier du cadre, de  <button class="cadre" ...>  jusqu'à  </button>,  et colle-le ailleurs.
+
+  DIAPORAMA DE L'ACCUEIL
+    Une ligne <img> par photo dans le bloc id="diapo". Ajoute ou enlève des lignes : les tirets suivent tout seuls.
+    Vitesse : tout en bas de ce fichier, DUREE_PHOTO et DUREE_FONDU.
+
+  AVIS DES CLIENTS
+    Une ligne <button class="cadre story"> par story dans le bloc id="stories". Elles s'affichent par groupes.
+    Nombre de cartes par groupe : --par-page (dans le <style>, cherche « .stories »).
+    Temps d'affichage d'un groupe : DUREE_AVIS, tout en bas de ce fichier.
+
+  LOGO
+    Le fichier images/logo-27.svg sert en haut, au-dessus des titres et en bas de page :
+    remplace-le par le logo officiel en gardant le même nom, et il change partout.
+
+  COULEURS ET TAILLES DES TEXTES DE L'ACCUEIL : bloc « RÉGLAGES », au début du <style>.
+
+  Chaque partie de la page commence par un commentaire en majuscules : ACCUEIL, LE CHEF, LA CARTE, etc.
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le 27 Gambetta, restaurant semi-gastronomique à Nancy</title>
+<meta name="description" content="Le 27 Gambetta, table semi-gastronomique à deux pas de la place Stanislas, à Nancy. Cuisine de saison du chef Kenneth Dernburg. Ouvert tous les jours, midi et soir.">
+<!-- La ligne suivante demande à Google de ne pas référencer le site tant qu'il n'est pas validé par le restaurant.
+     À supprimer le jour de la mise en ligne. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#070707">
+<link rel="icon" href="images/favicon.svg">
+<script>document.documentElement.className="js";</script>
+<style>
+/* =====================================================================
+   POLICE
+   Le Frenchie utilise Gill Sans Light, une police payante. Les iPhone et les Mac l'ont d'origine.
+   Partout ailleurs, le site utilise Lato (gratuite), fournie dans le dossier fonts/.
+   ===================================================================== */
+@font-face{font-family:"Lato";font-style:normal;font-weight:300;font-display:swap;src:url("fonts/lato-light.woff") format("woff")}
+@font-face{font-family:"Lato";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/lato-regular.woff") format("woff")}
+@font-face{font-family:"Marcellus";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/marcellus-regular.woff") format("woff")}
+/* =====================================================================
+   RÉGLAGES : couleurs et tailles les plus utiles
+   ===================================================================== */
+:root{
+  --noir:#070707;            /* fond de la page */
+  --noir-2:#0D0D0D;          /* fond des bandes un peu plus claires */
+  --noir-3:#151515;          /* fond d'un cadre photo pendant le chargement */
+  --blanc:#F6F3EC;           /* texte principal */
+  --gris:#BDB7AC;            /* texte secondaire */
+  --gris-2:#8F897E;          /* texte discret */
+  --or:#C9A55C;              /* or uni : petits titres, filets, flèches */
+  --or-clair:#EAD7A4;        /* or clair : survol des liens */
+  --or-metal:linear-gradient(105deg,#8F6D2E 0%,#D8B76C 24%,#F3E4B5 44%,#C9A55C 62%,#9C7833 82%,#DFC27E 100%);   /* or dégradé : bordure des boutons */
+  --trait:rgba(246,243,236,.14);     /* filets gris */
+  --trait-or:rgba(201,165,92,.5);    /* filets dorés */
+  --police:"Gill Sans","Gill Sans Nova","Lato",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --esp:.22em;               /* espacement des lettres des titres */
+
+  /* Accueil, sur ordinateur. Les tailles pour téléphone sont plus bas : cherche « sur téléphone ». */
+  --nom-taille:clamp(1.45rem,2.6vw,2.4rem);       /* « LE 27 GAMBETTA » */
+  --bouton-largeur:320px;                         /* largeur des grands boutons */
+  --infos-taille:clamp(.84rem,1.15vw,1.06rem);    /* adresse et horaires */
+  --plaque-titre:.74rem;                          /* « GUIDE MICHELIN 2026 », « GAULT&MILLAU 2026 » */
+  --plaque-texte:1.12rem;                         /* « Recommandé », « 13/20, Table de Chef » */
+
+  /* Mise en page */
+  --marge:clamp(22px,5vw,76px);      /* marge à gauche et à droite */
+  --bloc:clamp(72px,9vw,132px);      /* espace au-dessus et au-dessous de chaque partie */
+  --entete:72px;                     /* hauteur du bandeau du haut une fois la page descendue */
+  --entete-haut:112px;               /* hauteur du bandeau du haut à l'arrivée */
+  --doux:cubic-bezier(.2,.6,.2,1);
+}
+
+/* ===== BASE ===== */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{background:var(--noir);scroll-behavior:smooth;scroll-padding-top:var(--entete);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--noir);color:var(--blanc);font:300 1rem/1.8 var(--police);letter-spacing:.045em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip}
+img{display:block;max-width:100%}
+a{color:inherit}
+h1,h2,h3,p,ul,dl,dd,figure,blockquote{margin:0}
+ul{padding:0;list-style:none}
+button{font:inherit;color:inherit;letter-spacing:inherit}
+:focus-visible{outline:1px solid var(--or-clair);outline-offset:4px}
+::selection{background:var(--or);color:var(--noir)}
+.wrap{max-width:1200px;margin-inline:auto;padding-inline:var(--marge)}
+.bloc{padding-block:var(--bloc);overflow-x:clip}
+.bloc--trait{border-top:1px solid var(--trait)}
+.bloc--fonce{background:var(--noir-2);border-block:1px solid var(--trait)}
+
+/* ===== TITRES ET TEXTES ===== */
+h1,h2,h3{font-weight:300;text-transform:uppercase;letter-spacing:var(--esp);text-wrap:balance}
+h2{font-size:clamp(1.35rem,2.3vw,1.95rem);line-height:1.4}
+.cap{display:block;font:400 .68rem/1.6 var(--police);letter-spacing:.3em;text-transform:uppercase;color:var(--or)}
+.texte{color:var(--gris);max-width:52ch}
+.metal{background:var(--or-metal);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* le logo au-dessus des titres */
+.ornement{display:block;width:68px;height:48px;margin:0 auto 22px}
+.titre{text-align:center;margin-bottom:clamp(40px,5.4vw,72px)}
+.titre h2{text-indent:var(--esp)}
+.titre .texte{margin:16px auto 0}
+
+/* ===== BOUTONS : rectangles à bordure dorée, qui se remplissent au survol ===== */
+.btn{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 30px;border:2px solid var(--or);border-image:var(--or-metal) 1;border-radius:0;background:transparent;color:var(--blanc);font:400 .8rem/1.3 var(--police);letter-spacing:.26em;text-indent:.26em;text-transform:uppercase;text-decoration:none;text-align:center;cursor:pointer;transition:color .5s ease}
+.btn::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--or-metal);opacity:0;transition:opacity .5s ease}
+.btn:hover{color:var(--noir)}
+.btn:hover::before{opacity:1}
+.btn--large{width:var(--bouton-largeur);max-width:100%;min-height:60px;font-size:clamp(.82rem,1.05vw,.96rem)}
+.btn--fin{min-height:40px;padding:0 20px;border-width:1px;font-size:.68rem}
+.lien{font:400 .68rem/1 var(--police);letter-spacing:.26em;text-transform:uppercase;text-decoration:none;color:var(--blanc);padding-bottom:9px;border-bottom:1px solid var(--or);transition:color .3s}
+.lien:hover{color:var(--or-clair)}
+
+/* ===== PHOTOS : les réglages --x, --y, --zoom, --largeur et --format sont expliqués en haut du fichier ===== */
+.cadre{position:relative;display:block;width:100%;max-width:min(var(--largeur,100%),100%);aspect-ratio:var(--format,4/5);overflow:hidden;background:var(--noir-3);border:0;padding:0;margin:0;color:inherit}
+.cadre img,.diapo img{width:100%;height:100%;object-fit:cover;object-position:var(--x,50%) var(--y,50%);transform:scale(var(--zoom,1));transform-origin:var(--x,50%) var(--y,50%)}
+.cadre img{transition:scale 1.6s var(--doux)}
+button.cadre{cursor:zoom-in}
+button.cadre:hover img{scale:1.04}
+/* cadre avec un filet doré décalé derrière la photo */
+:root{--filet:1px}
+@media (max-resolution:.99dppx){:root{--filet:2px}}
+@media (max-resolution:.5dppx){:root{--filet:4px}}
+.cadre--lisere{box-shadow:14px 14px 0 calc(var(--filet) * -1) var(--noir),14px 14px 0 0 var(--trait-or)}
+/* ===== BANDEAU DU HAUT : logo au centre, liens de part et d'autre ===== */
+.entete{position:sticky;top:0;z-index:30;height:var(--entete-haut);margin-bottom:calc(var(--entete-haut) * -1);border-bottom:1px solid transparent;transition:height .45s var(--doux),margin-bottom .45s var(--doux),background .5s,border-color .5s}
+.entete.est-descendu{height:var(--entete);margin-bottom:calc(var(--entete) * -1);background:rgba(7,7,7,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom-color:var(--trait)}
+.entete__barre{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;height:100%;padding-inline:var(--marge)}
+.nav ul{display:flex;align-items:center;gap:clamp(18px,2.6vw,40px)}
+.nav--droite ul{justify-content:flex-end}
+.nav a:not(.btn),.entete__mobile{font:400 .7rem/1 var(--police);letter-spacing:.26em;text-transform:uppercase;text-decoration:none}
+.nav a:not(.btn){position:relative;padding:12px 0;white-space:nowrap}
+.nav a:not(.btn)::after{content:"";position:absolute;left:0;right:.26em;bottom:4px;height:1px;background:var(--or);transform:scaleX(0);transform-origin:left;transition:transform .45s var(--doux)}
+.nav a:not(.btn):hover::after{transform:scaleX(1)}
+.blason{display:block;line-height:0}
+.blason img{width:104px;height:74px;transition:width .45s var(--doux),height .45s var(--doux)}
+.entete.est-descendu .blason img{width:62px;height:44px}
+.entete__mobile{display:none;background:none;border:0;padding:12px 0;cursor:pointer;color:inherit}
+.entete__mobile--gauche{justify-self:start}
+.entete__mobile--droite{justify-self:end;border-bottom:1px solid var(--or);padding-bottom:8px}
+
+/* Menu plein écran (téléphone) */
+.menuPlein{position:fixed;inset:0;z-index:40;background:var(--noir);display:grid;place-items:center;padding:var(--marge)}
+.menuPlein ul{display:grid;gap:4px;text-align:center}
+.menuPlein a{display:block;padding:12px;font-size:1.02rem;letter-spacing:.3em;text-indent:.3em;text-transform:uppercase;text-decoration:none}
+.menuPlein a:hover{color:var(--or-clair)}
+.menuPlein__fermer{position:absolute;top:22px;right:var(--marge);background:none;border:0;padding:12px 0;cursor:pointer;font:400 .7rem/1 var(--police);letter-spacing:.26em;text-transform:uppercase}
+
+/* ===== ACCUEIL ===== */
+.accueil{position:relative;isolation:isolate;height:100svh;min-height:640px;max-height:1180px;overflow:hidden;background:var(--noir)}
+/* Le diaporama : les photos sont empilées, une seule est visible à la fois */
+.diapo{position:absolute;inset:0;z-index:-2;max-width:1920px;margin-inline:auto;overflow:hidden;will-change:transform}
+.diapo img{position:absolute;inset:0;opacity:0;visibility:hidden}
+.diapo:not(.pret) img:first-child{opacity:1;visibility:visible}
+.diapo img.est-dessous{opacity:1;visibility:visible;z-index:1}
+.diapo img.est-active{opacity:1;visibility:visible;z-index:2;transition:opacity var(--fondu,1.6s) cubic-bezier(.4,0,.2,1)}
+/* Voiles sombres par-dessus la photo : en haut (pour le logo), en bas (pour le texte), et sur les bords */
+.accueil__voile{position:absolute;inset:0;z-index:-1;pointer-events:none;background:
+  linear-gradient(to bottom,rgba(7,7,7,.88) 0,rgba(7,7,7,.34) 15%,rgba(7,7,7,0) 30%),
+  linear-gradient(to top,rgba(7,7,7,1) 0,rgba(7,7,7,.93) 14%,rgba(7,7,7,.78) 30%,rgba(7,7,7,.5) 44%,rgba(7,7,7,.16) 58%,rgba(7,7,7,0) 70%),
+  radial-gradient(ellipse 82% 72% at 50% 40%,rgba(7,7,7,0) 42%,rgba(7,7,7,.4) 100%)}
+.accueil__contenu{display:grid;grid-template-rows:1fr auto;height:100%;padding:var(--entete-haut) var(--marge) clamp(20px,3.6vh,36px)}
+.accueil__texte{align-self:end;width:100%;text-align:center;padding-bottom:clamp(22px,4vh,42px);text-shadow:0 0 24px rgba(7,7,7,.55)}
+.accueil h1{font-size:var(--nom-taille);line-height:1.25;letter-spacing:.34em;text-indent:.34em;margin-bottom:clamp(22px,3.4vh,34px)}
+.accueil__actions{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 34px}
+.accueil__infos{margin-top:clamp(18px,3vh,28px);font-size:var(--infos-taille);line-height:2.05;letter-spacing:.2em}
+.accueil__infos > span{display:block}
+.accueil__infos .adresse{text-transform:uppercase}
+.accueil__infos .horaires span{white-space:nowrap}
+/* Bas de l'accueil : Michelin à gauche, tirets au centre, Gault&Millau à droite */
+.accueil__pied{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:20px}
+.plaque{font-size:var(--plaque-texte);line-height:1.45;letter-spacing:.08em}
+.plaque .cap{font-size:var(--plaque-titre);margin-bottom:3px}
+.plaque--droite{text-align:right}
+.tirets{display:flex;align-items:center;gap:8px;padding-bottom:4px}
+.tirets button{position:relative;width:26px;height:24px;padding:0;border:0;background:none;cursor:pointer}
+.tirets button::before{content:"";position:absolute;left:0;right:0;top:11px;height:1px;background:rgba(246,243,236,.4);transition:background .4s}
+.tirets button:hover::before{background:var(--blanc)}
+.tirets button[aria-current="true"]::before{background:var(--or);height:2px}
+@media (min-width:1921px){
+  .diapo{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%)}
+}
+
+/* Apparition à l'arrivée sur la page */
+@media (prefers-reduced-motion:no-preference){
+  .diapo{animation:paraitre 2.2s var(--doux) both}
+  .accueil__texte > *,.accueil__pied{animation:monter 1.2s var(--doux) both}
+  .accueil__texte > h1{animation-delay:.45s}
+  .accueil__texte > .accueil__actions{animation-delay:.65s}
+  .accueil__texte > .accueil__infos{animation-delay:.85s}
+  .accueil__pied{animation-delay:1.1s}
+  @keyframes paraitre{from{opacity:0}to{opacity:1}}
+  @keyframes monter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+}
+
+/* Apparition douce des blocs quand on descend dans la page (attribut data-revele) */
+.js [data-revele]{opacity:0;transform:translateY(22px);transition:opacity 1.2s var(--doux) var(--d,0s),transform 1.2s var(--doux) var(--d,0s)}
+.js [data-revele].est-vu{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.js [data-revele]{opacity:1;transform:none;transition:none}}
+
+/* ===== PHRASE D'INTRODUCTION ===== */
+.manifeste{text-align:center}
+.manifeste p{font-size:clamp(.95rem,1.6vw,1.24rem);line-height:2.15;letter-spacing:.24em;text-indent:.24em;text-transform:uppercase;max-width:36ch;margin-inline:auto;text-wrap:balance}
+
+/* ===== LE CHEF ===== */
+/* Blocs « photo + texte » (chef, plat signature, lieu) : la colonne de la photo fait la largeur demandée (--largeur), le texte prend le reste */
+.chef .cadre,.signature .cadre,.lieu__photos{width:min(var(--largeur,420px),46vw);max-width:none}
+.chef__grille{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(48px,8vw,130px);align-items:center}
+.chef h2{margin-top:12px}
+.citation{font-size:clamp(1.05rem,1.55vw,1.3rem);line-height:1.85;letter-spacing:.07em;margin-top:clamp(22px,3vw,34px);max-width:34ch}
+.chef .texte{margin-top:clamp(16px,2vw,24px);max-width:44ch;font-size:.95rem}
+
+/* ===== LE PLAT SIGNATURE ===== */
+.signature__grille{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(40px,8vw,130px);align-items:center}
+.signature h2{margin-top:12px}
+.signature .accroche{margin-top:22px;font-size:1.05rem;letter-spacing:.08em;max-width:32ch}
+
+/* ===== LA CARTE ===== */
+.onglets{display:flex;justify-content:center;flex-wrap:wrap;gap:12px clamp(12px,2.4vw,28px);margin-bottom:clamp(26px,3.4vw,40px)}
+.onglets button{min-height:56px;padding:0 27px;border:1px solid var(--trait);background:none;cursor:pointer;font:400 .76rem/1.3 var(--police);letter-spacing:.24em;text-transform:uppercase;color:var(--gris-2);transition:color .4s,border-color .4s}
+.onglets button:hover{color:var(--blanc);border-color:var(--trait-or)}
+.onglets button[aria-selected="true"]{padding:0 26px;border:2px solid var(--or);border-image:var(--or-metal) 1;color:var(--blanc)}
+.carteCadre{border:1px solid var(--trait-or);padding:clamp(28px,4.6vw,64px) clamp(22px,4.6vw,64px)}
+.menu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(28px,4.4vw,60px)}
+@media (prefers-reduced-motion:no-preference){.menu{animation:monter .8s var(--doux) both}}
+.temps .cap{padding-bottom:14px;margin-bottom:22px;border-bottom:1px solid var(--trait)}
+.plat + .plat{margin-top:26px}
+.plat__nom{font-weight:400;font-size:.88rem;line-height:1.55;letter-spacing:.18em;text-transform:uppercase}
+.plat__nom small{display:inline-block;margin-left:10px;font-size:.62rem;letter-spacing:.22em;color:var(--or)}
+.plat__detail{font-size:.9rem;line-height:1.7;color:var(--gris-2);margin-top:6px}
+.carte__notes{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 0;margin-top:clamp(24px,3vw,36px);font-size:.84rem;color:var(--gris)}
+.carte__notes li{padding-inline:22px;text-align:center}
+.carte__notes li + li{border-left:1px solid var(--trait)}
+
+/* ===== LES ASSIETTES : 3 colonnes, celle du milieu décalée vers le bas ===== */
+.galerie{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(10px,1.7vw,24px);align-items:start}
+.galerie .cadre:nth-child(3n+2){margin-top:clamp(0px,5.4vw,76px)}
+.galerie__pied{text-align:center;margin-top:clamp(40px,5vw,64px)}
+
+/* ===== PAROLES DE CONVIVES ===== */
+.note{text-align:center;margin-bottom:clamp(36px,4.6vw,56px)}
+.note b{display:block;font-weight:300;font-size:clamp(2.5rem,5.2vw,4rem);line-height:1;letter-spacing:.08em;text-indent:.08em}
+.note .cap{margin-top:14px;color:var(--gris)}
+/* Les avis sont des cartes, affichées par groupes. --par-page = nombre de cartes visibles à la fois
+   (3 sur ordinateur ; 2 sur tablette et 1 sur téléphone, réglés plus bas dans « ÉCRANS MOYENS ET TÉLÉPHONES »). */
+.stories{--par-page:3;display:grid;grid-template-columns:repeat(var(--par-page),minmax(0,300px));justify-content:center;gap:clamp(12px,1.8vw,24px)}
+.story{aspect-ratio:auto;padding:clamp(8px,1vw,12px);border:1px solid var(--trait-or);transition:border-color .4s}
+.story img{height:auto;aspect-ratio:9/16}
+button.story:hover{border-color:var(--or-clair)}
+button.story:hover img{scale:1}
+/* Les groupes sont superposés, un seul est visible : l'ancien s'efface, puis le nouveau apparaît, carte après carte */
+.stories.est-pret .story{grid-row:1;grid-column:var(--colonne,1);opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s .5s,border-color .4s}
+.stories.est-pret .story.est-visible{opacity:1;visibility:visible;transition:opacity .8s ease calc(.45s + var(--retard,0s)),border-color .4s}
+.tirets--avis{justify-content:center;margin-top:clamp(20px,2.6vw,30px);padding-bottom:0}
+
+/* ===== LE LIEU ===== */
+.lieu__grille{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(40px,7vw,110px);align-items:center}
+.lieu h2{margin-top:12px}
+.lieu .texte{margin-top:22px;max-width:40ch}
+.faits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 34px;margin-top:clamp(28px,3.4vw,42px);border-top:1px solid var(--trait)}
+.faits div{padding:16px 0;border-bottom:1px solid var(--trait)}
+.faits dt{font-size:1.02rem;line-height:1.4;letter-spacing:.16em;text-transform:uppercase}
+.faits dd{font-size:.82rem;letter-spacing:.08em;color:var(--gris-2);margin-top:2px}
+.lieu__photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,1.7vw,24px);align-items:start}
+.lieu__photos .cadre:last-child{margin-top:clamp(30px,5.4vw,76px)}
+
+/* ===== PRIVATISER ===== */
+.privatiser{text-align:center}
+.privatiser h2{text-indent:var(--esp)}
+.privatiser .texte{margin:16px auto 0}
+.occasions{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 0;margin-block:clamp(32px,4.4vw,54px)}
+.occasions li{font-size:.8rem;line-height:1.6;letter-spacing:.2em;text-transform:uppercase;padding-inline:clamp(10px,1.4vw,18px);white-space:nowrap}
+.occasions li + li{border-left:1px solid var(--trait-or)}
+.privatiser .petit{margin-top:24px;font-size:.86rem;color:var(--gris-2)}
+
+/* ===== HORAIRES, ADRESSE, CONTACT ===== */
+.infos__grille{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(30px,5vw,80px)}
+.infos .cap{padding-bottom:14px;margin-bottom:20px;border-bottom:1px solid var(--trait)}
+.grand{font-size:clamp(1rem,1.4vw,1.16rem);line-height:1.65;letter-spacing:.16em;text-transform:uppercase}
+.grand a{text-decoration:none}
+.grand a:hover{color:var(--or-clair)}
+.infos p + p,.infos dl,.infos dl + p{margin-top:12px}
+.infos .texte{font-size:.92rem}
+.infos .texte a{text-decoration:none}
+.infos .texte a:hover{color:var(--or-clair)}
+.services div{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--trait);font-size:.92rem}
+.services dt{color:var(--gris)}
+.services dd{white-space:nowrap}
+.infos .lien{display:inline-block;margin-top:8px}
+
+/* ===== RÉSERVER ===== */
+.reserver{text-align:center}
+.reserver h2{text-indent:var(--esp)}
+.formulaire{display:grid;grid-template-columns:1.1fr 1.2fr .7fr;gap:clamp(14px,2vw,24px);max-width:820px;margin:clamp(36px,4.6vw,56px) auto 0;text-align:left}
+.champ label{margin-bottom:10px}
+/* Les trois champs : la flèche dorée est dessinée ici. « right 22px » = sa distance au bord droit du champ. */
+.champ input,.champ select{width:100%;height:56px;padding:0 54px 0 18px;border:1px solid rgba(246,243,236,.3);border-radius:0;color:var(--blanc);font:300 1rem/1 var(--police);letter-spacing:.08em;text-align:left;color-scheme:dark;transition:border-color .3s;
+  -webkit-appearance:none;-moz-appearance:none;appearance:none;
+  background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%23C9A55C' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 22px center/13px auto}
+.champ select option{color:#111;background:#fff}
+.champ input:hover,.champ select:hover,.champ input:focus,.champ select:focus{border-color:var(--or)}
+/* Champ date : on cache l'icône du navigateur et tout le champ ouvre le calendrier */
+.champ input[type=date]{position:relative}
+.champ input[type=date]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:auto;height:auto;margin:0;padding:0;opacity:0;cursor:pointer}
+.champ input[type=date]::-webkit-date-and-time-value{text-align:left}
+/* Firefox garde sa propre icône de calendrier, qu'on ne peut pas cacher : on n'y ajoute pas la flèche */
+@supports (-moz-appearance:none){
+  .champ input[type=date]{background-image:none;padding-right:20px}
+}
+.formulaire .btn{grid-column:1/-1;justify-self:center;width:min(100%,var(--bouton-largeur));min-height:60px;margin-top:12px}
+.retour{grid-column:1/-1;text-align:center;font-size:.92rem;line-height:1.7;color:var(--gris);border-top:1px solid var(--trait-or);padding-top:20px}
+.retour a{color:var(--or-clair);white-space:nowrap}
+.reserver__tel{margin-top:clamp(32px,4vw,46px)}
+.reserver__tel .cap{color:var(--gris-2);margin-bottom:8px;text-wrap:balance}
+
+/* ===== PIED DE PAGE ===== */
+.pied{border-top:1px solid var(--trait);padding-block:54px 50px;text-align:center;font-size:.84rem;color:var(--gris)}
+.pied .blason img{width:92px;height:66px;margin-inline:auto}
+.pied ul{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 30px;margin-top:26px}
+.pied a{text-decoration:none}
+.pied a:hover{color:var(--or-clair)}
+
+/* ===== PHOTO EN GRAND (quand on clique une photo) ===== */
+.visionneuse{border:0;padding:0;background:transparent;width:100vw;height:100dvh;max-width:none;max-height:none;overflow:hidden}
+.visionneuse::backdrop{background:rgba(0,0,0,.975)}
+.visionneuse[open]{display:grid;place-items:center}
+.visionneuse img{max-width:min(92vw,1100px);max-height:88dvh;object-fit:contain}
+.visionneuse button{position:fixed;top:22px;right:var(--marge);background:none;border:0;padding:12px 0;cursor:pointer;color:var(--blanc);font:400 .7rem/1 var(--police);letter-spacing:.26em;text-transform:uppercase}
+@media (prefers-reduced-motion:no-preference){.visionneuse[open] img{animation:monter .6s var(--doux) both}}
+
+/* =====================================================================
+   ÉCRANS MOYENS ET TÉLÉPHONES
+   ===================================================================== */
+@media (max-width:1200px){
+  .entete .nav{display:none}
+  .entete__mobile{display:inline-block}
+}
+@media (max-width:1100px){
+  .occasions{flex-direction:column;align-items:center;gap:8px}
+  .occasions li{font-size:.9rem}
+  .occasions li + li{border-left:0}
+}
+@media (max-width:860px){
+  /* tailles de l'accueil sur téléphone (elles remplacent celles du bloc RÉGLAGES) */
+  :root{--entete:64px;--entete-haut:96px;--nom-taille:1.3rem;--infos-taille:.78rem;--plaque-titre:min(.64rem,2.75vw);--plaque-texte:min(.9rem,3.7vw)}
+  .blason img{width:84px;height:60px}
+  .entete.est-descendu .blason img{width:56px;height:40px}
+  /* Accueil : la photo en haut, le texte dessous sur fond noir */
+  .accueil{height:auto;min-height:100svh;max-height:none}
+  .diapo{inset:0 0 auto 0;height:min(62svh,150vw);max-width:none;-webkit-mask-image:linear-gradient(to top,transparent 0,#000 30%);mask-image:linear-gradient(to top,transparent 0,#000 30%)}
+  .accueil__voile{background:linear-gradient(to bottom,rgba(7,7,7,.86) 0,rgba(7,7,7,0) 20%)}
+  .accueil__contenu{min-height:100svh;padding-top:min(52svh,126vw);padding-bottom:16px}
+  .accueil__texte{padding-bottom:22px}
+  .accueil h1{margin-bottom:22px}
+  .accueil .btn--large{width:300px;padding-inline:16px;font-size:.84rem}
+  .accueil__infos{letter-spacing:.15em;line-height:2}
+  .accueil__pied{grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  .plaque .cap{letter-spacing:.2em}
+  .tirets{grid-column:1/-1;grid-row:2;justify-content:center;padding-bottom:0}
+  .plaque,.plaque--droite{text-align:center}
+  /* Le reste : une seule colonne */
+  .chef__grille,.signature__grille,.lieu__grille{grid-template-columns:minmax(0,1fr)}
+  .chef .cadre,.signature .cadre,.lieu__photos{width:100%;max-width:min(var(--largeur,100%),100%)}
+  .chef .cadre{max-width:min(var(--largeur,100%),74vw)}
+  .menu,.infos__grille{grid-template-columns:minmax(0,1fr)}
+  .onglets button{flex:1 1 100%;max-width:340px}
+  .carte__notes li{padding-inline:0;flex-basis:100%}
+  .carte__notes li + li{border-left:0}
+  .galerie{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .galerie .cadre:nth-child(3n+2){margin-top:0}
+  .galerie .cadre:nth-child(2n){margin-top:clamp(24px,8vw,56px)}
+  .stories{--par-page:2}
+  .formulaire{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:680px){
+  .accueil__actions{flex-direction:column;align-items:center;gap:12px}
+  .accueil .btn--large{width:min(100%,340px);padding-inline:30px}
+}
+@media (max-width:560px){
+  .faits{grid-template-columns:minmax(0,1fr)}
+  .stories{--par-page:1}
+}
+
+/* ===== DEUX PHOTOS QUI SE CHEVAUCHENT : une grande, et une petite posée sur son coin en bas à droite ===== */
+.duo{--w:min(var(--largeur,500px),46vw);position:relative;width:var(--w);margin-bottom:calc(var(--w) * .1)}
+.chef .duo .cadre{max-width:none}
+.chef .duo__grande{width:80%}
+.chef .duo__petite{position:absolute;right:0;bottom:calc(var(--w) * -.1);width:46%;z-index:1;box-shadow:0 0 0 8px var(--noir),12px 12px 0 -1px var(--noir),12px 12px 0 0 var(--trait-or)}
+@media (max-width:860px){.duo{--w:min(var(--largeur,460px),80vw)}}
+
+h1,h2,h3,.manifeste p,.btn{font-family:"Marcellus",var(--police)}
+</style>
+</head>
+<body>
+
+<!-- ================= BANDEAU DU HAUT ================= -->
+<header class="entete" id="entete">
+  <div class="entete__barre">
+    <nav class="nav" aria-label="Navigation principale">
+      <ul>
+        <li><a href="#carte">La carte</a></li>
+        <li><a href="#chef">Le chef</a></li>
+        <li><a href="#assiettes">Les assiettes</a></li>
+      </ul>
+    </nav>
+    <button class="entete__mobile entete__mobile--gauche" id="menuOuvrir" type="button" aria-haspopup="dialog" aria-controls="menuPlein">Menu</button>
+    <a class="blason" href="#haut" aria-label="Le 27 Gambetta, retour en haut de page"><img src="images/logo-27.svg" alt="" width="104" height="74"></a>
+    <nav class="nav nav--droite" aria-label="Navigation, suite">
+      <ul>
+        <li><a href="#lieu">Le lieu</a></li>
+        <li><a href="#privatiser">Privatiser</a></li>
+        <li><a href="#infos">Infos</a></li>
+        <li><a class="btn btn--fin" href="#reserver">Réserver</a></li>
+      </ul>
+    </nav>
+    <a class="entete__mobile entete__mobile--droite" href="#reserver">Réserver</a>
+  </div>
+</header>
+
+<!-- Menu plein écran, sur téléphone -->
+<div class="menuPlein" id="menuPlein" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <button class="menuPlein__fermer" id="menuFermer" type="button">Fermer</button>
+  <ul>
+    <li><a href="#carte">La carte</a></li>
+    <li><a href="#chef">Le chef</a></li>
+    <li><a href="#assiettes">Les assiettes</a></li>
+    <li><a href="#avis">Avis</a></li>
+    <li><a href="#lieu">Le lieu</a></li>
+    <li><a href="#privatiser">Privatiser</a></li>
+    <li><a href="#infos">Horaires et accès</a></li>
+    <li><a href="#reserver">Réserver</a></li>
+  </ul>
+</div>
+
+<main id="haut">
+
+  <!-- ================= ACCUEIL ================= -->
+  <section class="accueil" id="accueil">
+
+    <!-- Photos du diaporama : une ligne par photo, dans l'ordre de passage -->
+    <div class="diapo" id="diapo">
+      <img src="images/veloute-orange.webp"  alt="Velouté orangé, dés de poisson et tuiles dentelle noires" style="--x:90%; --y:39%; --zoom:1.05">
+      <img src="images/coeur-dessus.webp"    alt="Dessert en forme de cœur rouge vu de dessus" style="--x:0%; --y:42%; --zoom:1.05">
+      <img src="images/tempura-dessus.webp"  alt="Gambas en tempura au sésame noir sur assiette noire et blanche, table en bois" style="--x:35%; --y:45%; --zoom:1"> 
+      <img src="images/coeur-gros-plan.webp" alt="Dessert en forme de cœur rouge, feuille d’or et tuiles dentelle" style="--x:55%; --y:45%; --zoom:1">
+      <img src="images/tempura-salle.webp"   alt="Gambas en tempura au sésame noir, dressées en salle avec un verre et un bouquet" style="--x:90%; --y:60%; --zoom:1.03">
+
+    </div>
+    <div class="accueil__voile"></div>
+
+    <div class="accueil__contenu">
+      <div class="accueil__texte">
+        <h1>Le 27 Gambetta</h1>
+        <div class="accueil__actions">
+          <a class="btn btn--large" href="#reserver">Réserver une table</a>
+          <a class="btn btn--large" href="#carte">La carte</a>
+        </div>
+        <p class="accueil__infos">
+          <span class="adresse">27 rue Gambetta, Nancy</span>
+          <span class="horaires"><span>Lun–Dim : 12h-13h30</span> <span>• 19h30-21h30</span></span>
+        </p>
+      </div>
+
+      <!-- Bas de l'accueil : guides et tirets du diaporama -->
+      <div class="accueil__pied">
+        <p class="plaque"><span class="cap">Guide Michelin 2026</span>Recommandé</p>
+        <div class="tirets" id="tirets" role="group" aria-label="Photos de l’accueil"></div>
+        <p class="plaque plaque--droite"><span class="cap">Gault&amp;Millau 2026</span>13/20, Table de Chef</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= PHRASE D'INTRODUCTION ================= -->
+  <section class="bloc manifeste"  style="padding-top:35x">
+    <div class="wrap" data-revele>
+      <p>Une cuisine de saison</p>
+      <p>Précise et généreuse</p>
+      <p>Préparée sous vos yeux</p>
+    </div>
+  </section>
+
+
+  <!-- ================= LE CHEF ================= -->
+  <section class="bloc bloc--trait chef" id="chef">
+    <div class="wrap chef__grille">
+      <!-- Photo du chef. « cadre--lisere » ajoute le filet doré décalé : enlève ce mot pour le retirer. -->
+      <div class="duo" style="--largeur:460px" data-revele>
+  <figure class="cadre cadre--lisere duo__grande" style="--format:4/5">
+    <img src="images/chef.webp" alt="Kenneth Dernburg, chef du 27 Gambetta, devant la vitrine du restaurant" loading="lazy" style="--x:70%; --y:50%; --zoom:1">
+  </figure>
+  <figure class="cadre duo__petite" style="--format:4/5">
+    <img src="images/chef-2.jpg" alt="Kenneth Dernburg en cuisine" loading="lazy" style="--x:50%; --y:90%; --zoom:1">
+  </figure>
+</div>
+      <div data-revele style="--d:.15s">
+        <p class="cap">Le chef</p>
+        <h2>Kenneth Dernburg</h2>
+        <blockquote class="citation">« À travers Le 27 Gambetta, je réalise un rêve, celui d’ouvrir mon propre restaurant. »</blockquote>
+        <p class="texte">Franco-américain, en cuisine depuis ses 15 ans. À ses côtés, une équipe professionnelle et appliquée, en salle comme en cuisine.</p>
+      </div>
+    </div>
+  </section>
+
+
+
+
+  <!-- ================= LA CARTE ================= -->
+  <section class="bloc bloc--trait" id="carte" >
+    <div class="wrap">
+      <header class="titre" data-revele>
+        <img class="ornement" src="images/logo-27.svg" alt="" width="68" height="48" loading="lazy">
+        <h2>La carte</h2>
+        <p class="texte">Elle change toutes les 8 à 10 semaines.</p>
+      </header>
+
+      <div data-revele>
+        <!-- Les deux onglets : un par menu -->
+        <div class="onglets" role="tablist" aria-label="Les menus">
+          <button type="button" role="tab" id="onglet-marche" aria-controls="menu-marche" aria-selected="true">Menu du marché</button>
+          <button type="button" role="tab" id="onglet-27" aria-controls="menu-27" aria-selected="false" tabindex="-1">Menu 27 Gambetta</button>
+        </div>
+
+        <div class="carteCadre">
+
+          <!-- Menu du marché -->
+          <div class="menu" role="tabpanel" id="menu-marche" aria-labelledby="onglet-marche" tabindex="0">
+            <div class="temps">
+              <span class="cap">Entrées</span>
+              <div class="plat"><p class="plat__nom">Poireaux</p><p class="plat__detail">Mosaïque de poireaux rôtis, caviar de hareng, vinaigrette à l’huile de sésame, mayonnaise au curry.</p></div>
+              <div class="plat"><p class="plat__nom">Œuf parfait</p><p class="plat__detail">Œuf cuit à basse température, crémeux de champignons, mie dorée aux herbes, huile chlorophylle de basilic.</p></div>
+            </div>
+            <div class="temps">
+              <span class="cap">Plats</span>
+              <div class="plat"><p class="plat__nom">Poisson du jour</p><p class="plat__detail">Velours de céleri-rave, riz noir impérial, salsifis glacés au thym, sauce curry.</p></div>
+              <div class="plat"><p class="plat__nom">Filet mignon</p><p class="plat__detail">Filet mignon de porc farci à la Morteau fumée, crémeux de carottes au beurre noisette, choux de Bruxelles, jus réduit.</p></div>
+            </div>
+            <div class="temps">
+              <span class="cap">Desserts</span>
+              <div class="plat"><p class="plat__nom">Éclat citron</p><p class="plat__detail">Crème de citron, meringue au citron noir, sablé aux amandes, gelée au citron vert.</p></div>
+              <div class="plat"><p class="plat__nom">Cheesecake mandarine</p><p class="plat__detail">Cheesecake aux agrumes, suprêmes et gelée de mandarine, caviar à la menthe, tuile au chocolat.</p></div>
+            </div>
+          </div>
+
+          <!-- Menu 27 Gambetta -->
+          <div class="menu" role="tabpanel" id="menu-27" aria-labelledby="onglet-27" tabindex="0" hidden>
+            <div class="temps">
+              <span class="cap">Entrées</span>
+              <div class="plat"><p class="plat__nom">Pleurotes</p><p class="plat__detail">Cassolette de pleurotes persillées déglacées au vin jaune, échalotes, ciboulette et émulsion blanche.</p></div>
+              <div class="plat"><p class="plat__nom">Saumon café betterave</p><p class="plat__detail">Gravlax de saumon mariné au café et à la betterave, mousse citron à l’aneth, duo de betteraves.</p></div>
+            </div>
+            <div class="temps">
+              <span class="cap">Plats</span>
+              <div class="plat"><p class="plat__nom">Noix de Saint-Jacques</p><p class="plat__detail">Noix de Saint-Jacques snackées, topinambours rôtis au romarin, crémeux de panais, sauce safran, chips de panais.</p></div>
+              <div class="plat"><p class="plat__nom">Carré d’agneau</p><p class="plat__detail">Carré d’agneau rôti au thym et à l’ail, écrasé de pommes de terre, jus d’agneau réduit, écrin croustillant de brick.</p></div>
+              <div class="plat"><p class="plat__nom">Pigeonneau<small>En supplément</small></p><p class="plat__detail">Cuisse en cromesquis, oignons rôtis, duo de pommes de terre, crémeux d’oignons, espuma de pommes de terre, jus réduit.</p></div>
+            </div>
+            <div class="temps">
+              <span class="cap">Desserts</span>
+              <div class="plat"><p class="plat__nom">Poire tonka</p><p class="plat__detail">Charlotte revisitée poire tonka, biscuit pain de Gênes, confit de poire, ganache tonka, noix de pécan et feuille d’or.</p></div>
+              <div class="plat"><p class="plat__nom">Autour du café</p><p class="plat__detail">Trompe-l’œil, biscuit cuillère au café, mousse vanille amaretto, sablé café.</p></div>
+            </div>
+          </div>
+
+        </div>
+
+        <ul class="carte__notes">
+          <li>Sélection de fromages en supplément</li>
+          <li>Tous les plats aussi à la carte</li>
+          <li>Végétarien, végan, allergies : la cuisine s’adapte</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= LES ASSIETTES ================= -->
+  <section class="bloc bloc--trait" id="assiettes">
+    <div class="wrap">
+      <header class="titre" data-revele>
+        <img class="ornement" src="images/logo-27.svg" alt="" width="68" height="48" loading="lazy">
+        <h2>Quelques assiettes...</h2>
+      </header>
+      <!-- Six photos, rangées de gauche à droite puis ligne suivante. Un clic sur une photo l'affiche en grand.
+           Chaque photo = un cadre (balise button) et, dedans, la photo (balise img). -->
+      <div class="galerie">
+        <button class="cadre" type="button" style="--format:4/5" data-revele>
+          <img src="images/plat1.jpg" alt="Gambas en tempura au sésame noir sur assiette noire et blanche, table en bois" loading="lazy" style="--x:75%; --y:60%; --zoom:1.15">
+        </button>
+        <button class="cadre" type="button" style="--format:4/5; --d:.12s" data-revele>
+          <img src="images/photo1jpg.jpg" alt="Assiette dressée de fleurs comestibles sur porcelaine bleue" loading="lazy" style="--x:50%; --y:100%; --zoom:1.1">
+        </button>
+        <button class="cadre" type="button" style="--format:4/5; --d:.24s" data-revele>
+          <img src="images/veloute-orange.webp" alt="Dessert au chocolat, framboises et sorbet sur assiette blanche" loading="lazy" style="--x:42%; --y:50%; --zoom:1">
+        </button>
+                <button class="cadre" type="button" style="--format:4/5" data-revele>
+          <img src="images/image copy.png" alt="Dessert en trompe-l’œil, deux grains de café en chocolat, feuille d’or" loading="lazy" style="--x:20%; --y:30%; --zoom:1">
+        </button>
+        <button class="cadre" type="button" style="--format:4/5; --d:.12s" data-revele>
+          <img src="images/chocolat-or.webp" alt="Dessert dressé sur une assiette blanche, nappe blanche et verres" loading="lazy" style="--x:0%; --y:62%; --zoom:1.02">
+        </button>
+        <button class="cadre" type="button" style="--format:4/5; --d:.24s" data-revele>
+          <img src=" images/chocolat-framboise.webp" alt="Velouté orangé, dés de poisson et tuiles dentelle noires" loading="lazy" style="--x:5%; --y:90%; --zoom:1.1">
+        </button>
+      </div>
+      <p class="galerie__pied"><a class="btn btn--large" href="https://www.instagram.com/le27gambetta/" target="_blank" rel="noopener">Instagram</a></p>
+    </div>
+  </section>
+
+
+  <!-- ================= PAROLES DE CONVIVES ================= -->
+  <section class="bloc bloc--fonce" id="avis">
+    <div class="wrap">
+      <header class="titre" data-revele>
+        <img class="ornement" src="images/logo-27.svg" alt="" width="68" height="48" loading="lazy">
+        <h2>Paroles de convives</h2>
+      </header>
+      <p class="note" data-revele><b class="metal">4,4 / 5</b><span class="cap">673 avis Google</span></p>
+      <div data-revele>
+        <!-- Stories Instagram des clients : une ligne par story, dans l'ordre d'affichage.
+             Elles s'affichent par groupes de 3 (2 sur tablette, 1 sur téléphone) et le groupe change tout seul.
+             Réglages : --par-page dans le <style> (cherche « .stories »), DUREE_AVIS tout en bas du fichier. -->
+        <div class="stories" id="stories">
+          <button class="cadre story" type="button"><img src="images/avis-elodyes.webp" alt="Story Instagram de el.odyes : « Une belle adresse au cadre épuré, qui propose une cuisine de qualité (locale et de saison). »" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/DDDD2.png" alt="Story Instagram de el.odyes : « Une belle adresse au cadre épuré, qui propose une cuisine de qualité (locale et de saison). »" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/avis-taishetu.webp" alt="Story Instagram de agence_taishetucoaching : Saint-Jacques snackées, topinambours rôtis au romarin, crème de panais, sauce safran, chips de panais" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/avis-alexanderprill-1.webp" alt="Story Instagram de alexanderprill : une entrée de saumon et un verre de vin blanc" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/avis-alexanderprill-2.webp" alt="Story Instagram de alexanderprill : un plat de volaille, purée de carotte et échalotes rôties" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/ddd4.png" alt="Story Instagram de el.odyes : « Une belle adresse au cadre épuré, qui propose une cuisine de qualité (locale et de saison). »" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/DDD5.png" alt="Story Instagram de el.odyes : « Une belle adresse au cadre épuré, qui propose une cuisine de qualité (locale et de saison). »" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/avis-gregorylouis.webp" alt="Story Instagram de _gregorylouis : un plat de volaille en deux cuissons, purée et légumes rôtis" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/DDD6.png" alt="Story Instagram de el.odyes : « Une belle adresse au cadre épuré, qui propose une cuisine de qualité (locale et de saison). »" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/avis-travelingcoach.webp" alt="Story Instagram de travelingcoach : un dessert, chou à la crème et aux agrumes, sorbet" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/DDD3.png" alt="Story Instagram de el.odyes : « Une belle adresse au cadre épuré, qui propose une cuisine de qualité (locale et de saison). »" loading="lazy"></button>
+          <button class="cadre story" type="button"><img src="images/image.png" alt="Story Instagram de el.odyes : « Une belle adresse au cadre épuré, qui propose une cuisine de qualité (locale et de saison). »" loading="lazy"></button>
+
+
+        
+        
+        </div>
+        <!-- Tirets pour passer d'un groupe à l'autre : ils se créent tout seuls -->
+        <div class="tirets tirets--avis" id="tiretsAvis" role="group" aria-label="Groupes d’avis"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= LE LIEU ================= -->
+  <section class="bloc lieu" id="lieu">
+    <div class="wrap lieu__grille">
+      <div data-revele>
+        <p class="cap">Le lieu</p>
+        <h2>Deux salles, une cuisine ouverte</h2>
+        <p class="texte">À deux pas de la place Stanislas.</p>
+        <dl class="faits">
+          <div><dt>2 salles</dt><dd>Sur deux étages</dd></div>
+          <div><dt>30 à 35 couverts</dt><dd>Par salle</dd></div>
+          <div><dt>Terrasse</dt><dd>Aux beaux jours</dd></div>
+          <div><dt>Climatisé</dt><dd>Toute l’année</dd></div>
+        </dl>
+      </div>
+      <!-- Deux photos côte à côte, la deuxième décalée vers le bas. --largeur = largeur des deux photos ensemble. -->
+      <div class="lieu__photos" style="--largeur:480px">
+        <button class="cadre" type="button" style="--format:3/4" data-revele>
+          <img src="images/SSSA.png" alt="Table dressée face à la cuisine ouverte du restaurant" loading="lazy" style="--x:50%; --y:55%; --zoom:1">
+        </button>
+        <button class="cadre" type="button" style="--format:3/4; --d:.15s" data-revele>
+          <img src="images/salleVIN.png" alt="Vin servi en carafe dans un verre à pied" loading="lazy" style="--x:40%; --y:45%; --zoom:1">
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= PRIVATISER ================= -->
+  <section class="bloc bloc--trait privatiser" id="privatiser">
+    <div class="wrap" data-revele>
+      <img class="ornement" src="images/logo-27.svg" alt="" width="68" height="48" loading="lazy">
+      <h2>Privatiser</h2>
+      <p class="texte">Une salle ou tout le restaurant, sur devis.</p>
+      <ul class="occasions">
+        <li>Mariages</li>
+        <li>Anniversaires</li>
+        <li>Soutenances de thèse</li>
+        <li>Repas d’entreprise</li>
+        <li>Soirées casino</li>
+      </ul>
+      <a class="btn btn--large" href="mailto:contact@le27gambetta.fr?subject=Demande%20de%20devis">Demander un devis</a>
+      <p class="petit">Bons cadeaux à retirer sur place ou reçus par e-mail.</p>
+    </div>
+  </section>
+
+
+  <!-- ================= HORAIRES, ADRESSE, CONTACT ================= -->
+  <section class="bloc bloc--trait infos" id="infos">
+    <div class="wrap infos__grille" data-revele>
+      <div>
+        <span class="cap">Horaires</span>
+        <p class="grand">Lundi – Dimanche</p>
+        <dl class="services">
+          <div><dt>Déjeuner</dt><dd>12h-13h30</dd></div>
+          <div><dt>Dîner</dt><dd>19h30-21h30</dd></div>
+        </dl>
+        <p class="texte">Ouvert aussi le 11 novembre 2026.</p>
+      </div>
+      <div>
+        <span class="cap">Adresse</span>
+        <p class="grand">27 rue Gambetta<br>54000 Nancy</p>
+        <p class="texte">Place Stanislas à deux pas, gare à 5 minutes.</p>
+        <p><a class="lien" href="https://www.google.com/maps/search/?api=1&query=Le+27+Gambetta+27+rue+Gambetta+54000+Nancy" target="_blank" rel="noopener">Itinéraire</a></p>
+      </div>
+      <div>
+        <span class="cap">Contact</span>
+        <p class="grand"><a href="tel:+33609514956">06 09 51 49 56</a></p>
+        <p class="texte"><a href="mailto:contact@le27gambetta.fr">contact@le27gambetta.fr</a></p>
+        <p><a class="lien" href="https://www.instagram.com/le27gambetta/" target="_blank" rel="noopener">Instagram</a></p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= RÉSERVER ================= -->
+  <!-- Le formulaire n'envoie rien pour l'instant : il affiche un message qui renvoie vers le téléphone. -->
+  <section class="bloc bloc--fonce reserver" id="reserver">
+    <div class="wrap" data-revele>
+      <img class="ornement" src="images/logo-27.svg" alt="" width="68" height="48" loading="lazy">
+      <h2>Réserver une table</h2>
+      <form class="formulaire" id="formulaire" novalidate>
+        <div class="champ">
+          <label class="cap" for="date">Date</label>
+          <input type="date" id="date" name="date" required>
+        </div>
+        <div class="champ">
+          <label class="cap" for="service">Service</label>
+          <select id="service" name="service">
+            <option value="au déjeuner">Déjeuner, dès 12h</option>
+            <option value="au dîner" selected>Dîner, dès 19h30</option>
+          </select>
+        </div>
+        <div class="champ">
+          <label class="cap" for="couverts">Couverts</label>
+          <select id="couverts" name="couverts">
+            <option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+        </div>
+        <button class="btn" type="submit">Réserver</button>
+        <p class="retour" id="retour" role="status" aria-live="polite" hidden></p>
+      </form>
+      <p class="reserver__tel"><span class="cap">Par téléphone, ou au-delà de 8 couverts</span><span class="grand"><a href="tel:+33609514956">06 09 51 49 56</a></span></p>
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ================= PIED DE PAGE ================= -->
+<footer class="pied">
+  <div class="wrap">
+    <a class="blason" href="#haut" aria-label="Le 27 Gambetta, retour en haut de page"><img src="images/logo-27.svg" alt="" width="92" height="66" loading="lazy"></a>
+    <ul>
+      <li>27 rue Gambetta, 54000 Nancy</li>
+      <li><a href="tel:+33609514956">06 09 51 49 56</a></li>
+      <li><a href="https://www.instagram.com/le27gambetta/" target="_blank" rel="noopener">Instagram</a></li>
+      <li><a href="https://www.linkedin.com/company/le-27-gambetta/" target="_blank" rel="noopener">LinkedIn</a></li>
+    </ul>
+  </div>
+</footer>
+
+<!-- Fenêtre qui affiche une photo en grand -->
+<dialog class="visionneuse" id="visionneuse" aria-label="Photo en grand">
+  <button type="button" id="visionneuseFermer">Fermer</button>
+  <img alt="">
+</dialog>
+
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     RÉGLAGES DU DIAPORAMA DE L'ACCUEIL (en millisecondes : 1000 = 1 seconde)
+     ===================================================================== */
+  var DUREE_PHOTO = 3500;   // temps entre deux changements de photo
+  var DUREE_FONDU = 1400;   // durée du fondu d'une photo à la suivante
+
+
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  var sobre=window.matchMedia("(prefers-reduced-motion: reduce)").matches;   // l'appareil demande moins d'animations
+
+  /* ---------- Diaporama de l'accueil : fondu enchaîné ---------- */
+  var accueil=$("#accueil"),diapo=$("#diapo"),vues=$$("img",diapo),tirets=$("#tirets");
+  var courant=0,minuterie=null,menage=null,demande=0,enVue=true;
+  accueil.style.setProperty("--fondu",DUREE_FONDU+"ms");
+  if(vues.length){vues[0].classList.add("est-active");}
+  diapo.classList.add("pret");
+  // un tiret par photo
+  var boutons=vues.map(function(v,i){
+    var b=document.createElement("button");b.type="button";
+    b.setAttribute("aria-label","Photo "+(i+1)+" sur "+vues.length);
+    b.addEventListener("click",function(){aller(i);});
+    tirets.appendChild(b);return b;
+  });
+  if(vues.length<2){tirets.hidden=true;}
+  function majTirets(){
+    boutons.forEach(function(b,i){if(i===courant){b.setAttribute("aria-current","true");}else{b.removeAttribute("aria-current");}});
+  }
+  function planifier(){
+    clearTimeout(minuterie);
+    if(enVue&&!document.hidden&&vues.length>1){
+      minuterie=setTimeout(function(){aller((courant+1)%vues.length);},DUREE_PHOTO);
+    }
+  }
+  function aller(i){
+    if(i===courant){planifier();return;}
+    var apres=vues[i],jeton=++demande;
+    clearTimeout(minuterie);
+    // on attend que la photo suivante soit prête, pour que le fondu ne saccade pas
+    var pret=apres.decode?apres.decode().catch(function(){}):Promise.resolve();
+    pret.then(function(){
+      if(jeton!==demande){return;}
+      var avant=vues[courant];
+      vues.forEach(function(v){if(v!==avant){v.classList.remove("est-dessous");}});
+      avant.classList.remove("est-active");avant.classList.add("est-dessous");
+      apres.classList.add("est-active");
+      courant=i;majTirets();
+      clearTimeout(menage);
+      menage=setTimeout(function(){avant.classList.remove("est-dessous");},DUREE_FONDU+200);
+      planifier();
+    });
+  }
+  document.addEventListener("visibilitychange",planifier);
+  if("IntersectionObserver" in window){
+    new IntersectionObserver(function(e){enVue=e[0].isIntersecting;planifier();},{threshold:0.05}).observe(accueil);
+  }
+
+  /* ---------- Photo en grand au clic ---------- */
+  var vision=$("#visionneuse");
+  if(vision&&vision.showModal){
+    document.addEventListener("click",function(e){
+      var cadre=e.target.closest("button.cadre");
+      if(!cadre){return;}
+      var img=$("img",cadre);if(!img){return;}
+      var grand=$("img",vision);grand.src=img.currentSrc||img.src;grand.alt=img.alt;vision.showModal();
+    });
+    vision.addEventListener("click",function(e){if(e.target===vision||e.target.id==="visionneuseFermer"){vision.close();}});
+  }
+
+  /* ---------- Avis : des cartes affichées par groupes, qui changent toutes seules ---------- */
+  var DUREE_AVIS = 3000;   // temps d'affichage d'un groupe d'avis (1000 = 1 seconde)
+  var piste=$("#stories"),cartes=$$(".story",piste),tiretsAvis=$("#tiretsAvis");
+  var parPage=0,nbPages=1,pageAvis=0,minuterieAvis=null,avisEnVue=false,avisRetenu=false;
+  function planifierAvis(){
+    clearTimeout(minuterieAvis);
+    if(avisEnVue&&!avisRetenu&&!document.hidden&&nbPages>1){
+      minuterieAvis=setTimeout(function(){
+        if(vision&&vision.open){planifierAvis();return;}   // une photo est ouverte en grand : on attend
+        montrerAvis(pageAvis+1);
+      },DUREE_AVIS);
+    }
+  }
+  function montrerAvis(p){
+    pageAvis=(p+nbPages)%nbPages;
+    cartes.forEach(function(c,i){c.classList.toggle("est-visible",Math.floor(i/parPage)===pageAvis);});
+    $$("button",tiretsAvis).forEach(function(b,i){if(i===pageAvis){b.setAttribute("aria-current","true");}else{b.removeAttribute("aria-current");}});
+    planifierAvis();
+  }
+  // Répartit les cartes en groupes d'après --par-page (refait si la largeur de l'écran change)
+  function grouperAvis(){
+    var n=Math.max(1,parseInt(getComputedStyle(piste).getPropertyValue("--par-page"),10)||3);
+    if(n===parPage){return;}
+    var premiere=pageAvis*parPage;
+    parPage=n;nbPages=Math.ceil(cartes.length/parPage);
+    cartes.forEach(function(c,i){c.style.setProperty("--colonne",(i%parPage)+1);c.style.setProperty("--retard",((i%parPage)*0.12)+"s");});
+    tiretsAvis.textContent="";
+    cartes.forEach(function(c,i){
+      if(i%parPage){return;}
+      var page=i/parPage,b=document.createElement("button");b.type="button";
+      b.setAttribute("aria-label","Avis, groupe "+(page+1)+" sur "+nbPages);
+      b.addEventListener("click",function(){montrerAvis(page);});
+      tiretsAvis.appendChild(b);
+    });
+    tiretsAvis.hidden=nbPages<2;
+    piste.classList.add("est-pret");
+    montrerAvis(Math.floor(premiere/parPage));
+  }
+  if(cartes.length){
+    grouperAvis();
+    window.addEventListener("resize",grouperAvis);
+    document.addEventListener("visibilitychange",planifierAvis);
+    // le défilement attend tant que la souris est sur une carte, ou qu'une carte est sélectionnée au clavier
+    if(window.matchMedia("(hover:hover)").matches){
+      piste.addEventListener("mouseenter",function(){avisRetenu=true;planifierAvis();});
+      piste.addEventListener("mouseleave",function(){avisRetenu=false;planifierAvis();});
+    }
+    piste.addEventListener("focusin",function(e){if(e.target.matches(":focus-visible")){avisRetenu=true;planifierAvis();}});
+    piste.addEventListener("focusout",function(){avisRetenu=false;planifierAvis();});
+    // sur téléphone : glisser le doigt vers la gauche ou la droite change de groupe
+    var departDoigt=null;
+    piste.addEventListener("touchstart",function(e){departDoigt=e.touches[0].clientX;},{passive:true});
+    piste.addEventListener("touchend",function(e){
+      if(departDoigt===null){return;}
+      var ecart=e.changedTouches[0].clientX-departDoigt;departDoigt=null;
+      if(Math.abs(ecart)>40){montrerAvis(pageAvis+(ecart<0?1:-1));}
+    },{passive:true});
+    // le défilement ne tourne que quand les avis sont à l'écran ; à leur approche, on charge toutes les photos des cartes
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(function(e){
+        avisEnVue=e[0].isIntersecting;
+        if(avisEnVue){cartes.forEach(function(c){var i=$("img",c);if(i){i.loading="eager";}});}
+        planifierAvis();
+      },{threshold:0.2}).observe(piste);
+    }else{avisEnVue=true;planifierAvis();}
+  }
+
+  /* ---------- Bandeau du haut qui rétrécit, photo d'accueil qui glisse doucement ---------- */
+  var entete=$("#entete"),texteAccueil=$(".accueil__contenu");
+  var attente=false;
+  function suivre(){
+    attente=false;var y=window.scrollY;
+    entete.classList.toggle("est-descendu",y>40);
+    if(!sobre&&y<accueil.offsetHeight){
+      diapo.style.transform="translate3d(0,"+(y*0.14).toFixed(1)+"px,0)";
+      texteAccueil.style.opacity=Math.max(0,1-y/(accueil.offsetHeight*0.7)).toFixed(3);
+    }
+  }
+  suivre();
+  window.addEventListener("scroll",function(){if(!attente){attente=true;requestAnimationFrame(suivre);}},{passive:true});
+
+  /* ---------- Menu plein écran (téléphone) ---------- */
+  var menu=$("#menuPlein"),ouvrir=$("#menuOuvrir");
+  function fermerMenu(retour){if(menu.hidden){return;}menu.hidden=true;document.body.style.overflow="";if(retour){ouvrir.focus();}}
+  ouvrir.addEventListener("click",function(){menu.hidden=false;document.body.style.overflow="hidden";$("#menuFermer").focus();});
+  $("#menuFermer").addEventListener("click",function(){fermerMenu(true);});
+  menu.addEventListener("click",function(e){if(e.target.closest("a")){fermerMenu(false);}});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"){fermerMenu(true);}});
+
+  /* ---------- Onglets de la carte ---------- */
+  var onglets=$$("[role=tab]");
+  function activer(t,focus){
+    onglets.forEach(function(o){
+      var actif=o===t;o.setAttribute("aria-selected",String(actif));o.tabIndex=actif?0:-1;
+      document.getElementById(o.getAttribute("aria-controls")).hidden=!actif;
+    });
+    if(focus){t.focus();}
+  }
+  onglets.forEach(function(o,i){
+    o.addEventListener("click",function(){activer(o,false);});
+    o.addEventListener("keydown",function(e){
+      if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();activer(onglets[(i+(e.key==="ArrowRight"?1:onglets.length-1))%onglets.length],true);}
+    });
+  });
+
+  /* ---------- Apparition des blocs quand on descend dans la page ---------- */
+  var aReveler=$$("[data-revele]");
+  if(sobre||!("IntersectionObserver" in window)){aReveler.forEach(function(el){el.classList.add("est-vu");});}
+  else{
+    var veille=new IntersectionObserver(function(entrees){
+      entrees.forEach(function(en){if(en.isIntersecting){en.target.classList.add("est-vu");veille.unobserve(en.target);}});
+    },{rootMargin:"0px 0px -8% 0px",threshold:0.08});
+    aReveler.forEach(function(el){veille.observe(el);});
+  }
+
+  /* ---------- Réservation : rien n'est envoyé, le message renvoie vers le téléphone ---------- */
+  var champDate=$("#date"),maintenant=new Date();
+  function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  champDate.min=iso(maintenant);champDate.value=iso(maintenant);
+  var retour=$("#retour");
+  $("#formulaire").addEventListener("submit",function(e){
+    e.preventDefault();
+    var d=champDate.value?new Date(champDate.value+"T12:00:00"):null;
+    if(!d||isNaN(d)){retour.hidden=false;retour.textContent="Choisissez une date pour continuer.";champDate.focus();return;}
+    var quand=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+    var n=$("#couverts").value,service=$("#service").value;
+    retour.hidden=false;
+    retour.innerHTML="La réservation en ligne n’est pas encore active. Pour votre table du "+quand+" "+service+", "+n+(n==="1"?" couvert":" couverts")+", appelez le <a href=\"tel:+33609514956\">06 09 51 49 56</a>.";
+  });
+
+  majTirets();planifier();
+})();
+</script>
+</body>
+</html>
